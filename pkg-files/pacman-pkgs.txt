@@ -105,3 +105,10 @@ zip
 zsh
 zsh-syntax-highlighting
 zsh-autosuggestions
+doublecmd
+bitwarden
+scribus
+yubioath-desktop
+yubico-pam
+vlc
+qbittorrent
