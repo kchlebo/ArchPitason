@@ -25,3 +25,7 @@ intellij-idea-community-edition-jre
 mullvad-vpn
 signal-desktop-beta
 tor-browser
+sublime-text-4
+qpdfview
+megasync-bin
+mkinitcpio-firmware
