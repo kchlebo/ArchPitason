@@ -126,6 +126,7 @@ elif [[ "${FS}" == "luks" ]]; then
     echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat ${partition3} -
 # open luks container and ROOT will be place holder 
     echo -n "${LUKS_PASSWORD}" | cryptsetup open ${partition3} ROOT -
+    partition3="/dev/mapper/ROOT"
 # now format that container
     mkfs.btrfs -L ROOT ${partition3}
 # create subvolumes for btrfs
