@@ -22,7 +22,7 @@ GRUB EFI Bootloader Install & Check
 source ${HOME}/ArchTitus/configs/setup.conf
 
 if [[ -d "/sys/firmware/efi" ]]; then
-    grub-install --efi-directory=/boot ${DISK}
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --recheck ${DISK}
 fi
 
 echo -ne "
