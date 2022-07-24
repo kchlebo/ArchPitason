@@ -96,11 +96,16 @@ subvolumesetup () {
 # unmount root to remount with subvolume 
     umount /mnt
 # mount @ subvolume
+# MOUNT_OPTIONS "noatime,compress=zstd,ssd,commit=120"
+  if [[ "${FS}" == "luks" ]]; then
+    partition3=/dev/mapper/ROOT
+  fi
     mount -o ${MOUNT_OPTIONS},subvol=@ ${partition3} /mnt
 # make directories home, .snapshots, var, tmp
     mkdir -p /mnt/{home,var,tmp,.snapshots}
 # mount subvolumes
     mountallsubvol
+
 }
 
 if [[ "${DISK}" =~ "nvme" ]]; then
@@ -130,9 +135,10 @@ elif [[ "${FS}" == "luks" ]]; then
     mkfs.btrfs -L ROOT /dev/mapper/ROOT
 # create subvolumes for btrfs
     mount -t btrfs /dev/mapper/ROOT /mnt
+    real_partition3=partition3
     subvolumesetup
 # store uuid of encrypted partition for grub
-    echo ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value ${partition3}) >> $CONFIGS_DIR/setup.conf
+    echo ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value ${real_partition3}) >> $CONFIGS_DIR/setup.conf
 fi
 
 # mount target
