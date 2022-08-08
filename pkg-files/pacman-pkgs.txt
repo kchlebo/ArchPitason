@@ -112,3 +112,6 @@ yubioath-desktop
 yubico-pam
 vlc
 qbittorrent
+libreoffice-fresh
+libreoffice-fresh-he
+libreoffice-fresh-hu
