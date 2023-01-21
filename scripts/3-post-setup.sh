@@ -22,7 +22,7 @@ GRUB EFI Bootloader Install & Check
 source ${HOME}/ArchTitus/configs/setup.conf
 
 if [[ -d "/sys/firmware/efi" ]]; then
-    grub-install --efi-directory=/boot ${DISK}
+    grub-install --target=x86_64-efi --efi-directory=/boot/efi --recheck ${DISK}
 fi
 
 echo -ne "
@@ -33,6 +33,7 @@ echo -ne "
 # set kernel parameter for decrypting the drive
 if [[ "${FS}" == "luks" ]]; then
 sed -i "s%GRUB_CMDLINE_LINUX_DEFAULT=\"%GRUB_CMDLINE_LINUX_DEFAULT=\"cryptdevice=UUID=${ENCRYPTED_PARTITION_UUID}:ROOT root=/dev/mapper/ROOT %g" /etc/default/grub
+sed -i "s/#GRUB_ENABLE_CRYPTODISK=y/GRUB_ENABLE_CRYPTODISK=y/g" /etc/default/grub
 fi
 # set kernel parameter for adding splash screen
 sed -i 's/GRUB_CMDLINE_LINUX_DEFAULT="[^"]*/& splash /' /etc/default/grub
