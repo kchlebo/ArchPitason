@@ -5,3 +5,4 @@ configs/setup.conf
 # keep logs out
 configs/*.log
 .idea
+lsp
