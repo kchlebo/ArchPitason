@@ -10,7 +10,7 @@
 #github-action genshdoc
 #
 # @file Preinstall
-# @brief Contains the steps necessary to configure and pacstrap the install to selected drive. 
+# @brief Contains the steps necessary to configure and pacstrap the install to selected drive.
 echo -ne "
 -------------------------------------------------------------------------
    █████╗ ██████╗  ██████╗██╗  ██╗████████╗██╗████████╗██╗   ██╗███████╗
@@ -63,12 +63,14 @@ sgdisk -a 2048 -o ${DISK} # new gpt disk 2048 alignment
 #sgdisk -n 3::-0 --typecode=3:8300 --change-name=3:'ROOT' ${DISK} # partition 3 (Root), default start, remaining
 if [[ -d "/sys/firmware/efi" ]]; then # Checking for bios system
       sgdisk -n 1::+250M --typecode=1:8300 --change-name=1:'BIOSBOOT' ${DISK} # partition 1 (Linux System Partition)
-    	sgdisk -n 2::+100M --typecode=2:ef00 --change-name=2:'EFIBOOT' ${DISK} # partition 2 (UEFI Boot Partition)
-    	sgdisk -n 3::-0 --typecode=3:8300 --change-name=3:'ROOT' ${DISK} # partition 3 (Root), default start, remaining
+    	sgdisk -n 2::+550M --typecode=2:ef00 --change-name=2:'EFIBOOT' ${DISK} # partition 2 (UEFI Boot Partition)
+    	sgdisk -n 3::+64G --typecode=3:8200 --change-name=3:'SWAP' ${DISK} # partition 3 (Swap Partition)
+    	sgdisk -n 4::-0 --typecode=4:8300 --change-name=4:'ROOT' ${DISK} # partition 4 (Root), default start, remaining
     else
     	sgdisk -n 1::+1M --typecode=1:ef02 --change-name=1:'BIOSBOOT' ${DISK} # partition 1 (BIOS Boot Partition)
-    	sgdisk -n 2::+300M --typecode=2:ef00 --change-name=2:'EFIBOOT' ${DISK} # partition 2 (UEFI Boot Partition)
-    	sgdisk -n 3::-0 --typecode=3:8300 --change-name=3:'ROOT' ${DISK} # partition 3 (Root), default start, remaining
+    	sgdisk -n 2::+550M --typecode=2:ef00 --change-name=2:'EFIBOOT' ${DISK} # partition 2 (UEFI Boot Partition)
+    	sgdisk -n 3::+64G --typecode=3:8200 --change-name=3:'SWAP' ${DISK} # partition 3 (Swap Partition)
+    	sgdisk -n 4::-0 --typecode=4:8300 --change-name=4:'ROOT' ${DISK} # partition 4 (Root), default start, remaining
       sgdisk -A 1:set:2 ${DISK}
 fi
 partprobe ${DISK} # reread partition table to ensure it is correct
@@ -79,7 +81,7 @@ echo -ne "
                     Creating Filesystems
 -------------------------------------------------------------------------
 "
-# @description Creates the btrfs subvolumes. 
+# @description Creates the btrfs subvolumes.
 createsubvolumes () {
     btrfs subvolume create /mnt/@
     btrfs subvolume create /mnt/@home
@@ -96,11 +98,11 @@ mountallsubvol () {
     mount -o ${MOUNT_OPTIONS},subvol=@.snapshots ${partition3} /mnt/.snapshots
 }
 
-# @description BTRFS subvolulme creation and mounting. 
+# @description BTRFS subvolulme creation and mounting.
 subvolumesetup () {
 # create nonroot subvolumes
-    createsubvolumes     
-# unmount root to remount with subvolume 
+    createsubvolumes
+# unmount root to remount with subvolume
     umount /mnt
 # mount @ subvolume
     mount -o ${MOUNT_OPTIONS},subvol=@ ${partition3} /mnt
@@ -114,29 +116,44 @@ if [[ "${DISK}" =~ "nvme" ]]; then
     partition1=${DISK}p1
     partition2=${DISK}p2
     partition3=${DISK}p3
+    partition4=${DISK}p4
 else
     partition1=${DISK}1
     partition2=${DISK}2
     partition3=${DISK}3
+    partition4=${DISK}4
 fi
 
 mkfs.ext2 -L "BOOT" ${partition1}
 if [[ "${FS}" == "btrfs" ]]; then
     mkfs.vfat -F32 -n "EFIBOOT" ${partition2}
-    mkfs.btrfs -L ROOT ${partition3} -f
-    mount -t btrfs ${partition3} /mnt
+    mkswap -L SWAP ${partition3}
+    mkfs.btrfs -L ROOT ${partition4} -f
+    mount -t btrfs ${partition4} /mnt
     subvolumesetup
 elif [[ "${FS}" == "ext4" ]]; then
     mkfs.vfat -F32 -n "EFIBOOT" ${partition2}
-    mkfs.ext4 -L ROOT ${partition3}
-    mount -t ext4 ${partition3} /mnt
+    mkswap -L SWAP ${partition3}
+    mkfs.ext4 -L ROOT ${partition4}
+    mount -t ext4 ${partition4} /mnt
+elif [[ "${FS}" == "luks-ext4" ]]; then
+    mkfs.vfat -F32 -n "EFIBOOT" ${partition2}
+    mkswap -L SWAP ${partition3}
+    # enter luks password to cryptsetup and format root partition
+    echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat --type luks1 ${partition4} -
+    # open luks container and ROOT will be place holder
+    echo -n "${LUKS_PASSWORD}" | cryptsetup open ${partition4} ROOT -
+    mkfs.ext4 -L ROOT /dev/mapper/ROOT
+    mount -t ext4 /dev/mapper/ROOT /mnt
+    echo ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value ${partition4}) >> $CONFIGS_DIR/setup.conf
 elif [[ "${FS}" == "luks" ]]; then
     mkfs.vfat -F32 -n "EFIBOOT" ${partition2}
+    mkswap -L SWAP ${partition3}
 # enter luks password to cryptsetup and format root partition
-    echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat --type luks1 ${partition3} -
-# open luks container and ROOT will be place holder 
-    echo -n "${LUKS_PASSWORD}" | cryptsetup open ${partition3} ROOT -
-#    partition3="/dev/mapper/ROOT"
+    echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat --type luks1 ${partition4} -
+# open luks container and ROOT will be place holder
+    echo -n "${LUKS_PASSWORD}" | cryptsetup open ${partition4} ROOT -
+#    partition4="/dev/mapper/ROOT"
 # now format that container
     mkfs.btrfs -L ROOT /dev/mapper/ROOT
 # create subvolumes for btrfs
@@ -154,7 +171,7 @@ elif [[ "${FS}" == "luks" ]]; then
 # mount subvolumes
     mountallsubvol
 # store uuid of encrypted partition for grub
-    echo ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value ${partition3}) >> $CONFIGS_DIR/setup.conf
+    echo ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value ${partition4}) >> $CONFIGS_DIR/setup.conf
 fi
 
 ## mount target
@@ -172,6 +189,7 @@ else
 	mkdir -p /mnt/boot
 	mount ${partition2} /mnt/boot
 
+swapon /dev/${partition3}
 
 if ! grep -qs '/mnt' /proc/mounts; then
     echo "Drive is not mounted can not continue"
@@ -191,7 +209,7 @@ cp -R ${SCRIPT_DIR} /mnt/root/ArchTitus
 cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
 
 genfstab -L /mnt >> /mnt/etc/fstab
-echo " 
+echo "
   Generated /etc/fstab:
 "
 cat /mnt/etc/fstab
