@@ -5,7 +5,7 @@ This script will ask users about their prefrences like disk, file system, timezo
 # Settings
 
 ## General Settings
-* **CONFIG_FILE** (string)[default: **$CONFIGS_DIR/setup.conf**]: Location of setup.conf to be used by set_option and all subsequent scripts. 
+* **CONFIG_FILE** (string)[default: **$CONFIGS_DIR/setup.conf**]: Location of setup.conf to be used by set_option and all subsequent scripts.
 
 
 # Functions
@@ -55,11 +55,11 @@ btrfs and ext4. Others will be added in future.
 
 ## timezone()
 
-Detects and sets timezone. 
+Detects and sets timezone.
 
 ## keymap()
 
-Set user's keyboard mapping. 
+Set user's keyboard mapping.
 
 ## drivessd()
 
@@ -71,11 +71,11 @@ Disk selection for drive to be used with installation.
 
 ## userinfo()
 
-Gather username and password to be used for installation. 
+Gather username and password to be used for installation.
 
 ## aurhelper()
 
-Choose AUR helper. 
+Choose AUR helper.
 
 ## desktopenv()
 
@@ -83,6 +83,6 @@ Choose Desktop Environment
 
 ## installtype()
 
-Choose whether to do full or minimal installation. 
+Choose whether to do full or minimal installation.
 
 

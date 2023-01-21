@@ -1,10 +1,10 @@
 # Preinstall
 
-Contains the steps necessary to configure and pacstrap the install to selected drive. 
+Contains the steps necessary to configure and pacstrap the install to selected drive.
 
 # Overview
 
-Creates the btrfs subvolumes. 
+Creates the btrfs subvolumes.
 
 
 # Functions
@@ -18,6 +18,6 @@ Mount all btrfs subvolumes after root has been mounted.
 
 ## subvolumesetup()
 
-BTRFS subvolulme creation and mounting. 
+BTRFS subvolulme creation and mounting.
 
 
