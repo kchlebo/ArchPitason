@@ -185,6 +185,7 @@ if [ -d /sys/firmware/efi ]; then
 else
 	mkdir -p /mnt/boot
 	mount ${partition2} /mnt/boot
+fi
 
 swapon /dev/${partition3}
 
