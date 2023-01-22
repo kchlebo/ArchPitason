@@ -187,7 +187,7 @@ else
 	mount ${partition2} /mnt/boot
 fi
 
-swapon /dev/${partition3}
+swapon ${partition3}
 
 if ! grep -qs '/mnt' /proc/mounts; then
     echo "Drive is not mounted can not continue"
